@@ -42,41 +42,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     navigator.serviceWorker.register('/ultras-lutetia/sw.js').catch(() => {});
   }
 
-  // Gérer le hash #access_token de Supabase (confirmation email)
-  const hash = window.location.hash;
-  if (hash && hash.includes('access_token')) {
-    // Attendre que Supabase établisse la session depuis le hash
-    await new Promise(resolve => {
-      const { data: { subscription } } = UL.sb.auth.onAuthStateChange((event, session) => {
-        if (session) { subscription.unsubscribe(); resolve(); }
-      });
-      // Timeout de sécurité 3s
-      setTimeout(resolve, 3000);
-    });
-    window.history.replaceState({}, '', window.location.pathname);
-  }
-
-  // Gérer le token de confirmation email dans l'URL (?token_hash=)
-  const params = new URLSearchParams(window.location.search);
-  const tokenHash = params.get('token_hash');
-  const type = params.get('type');
-  if (tokenHash && type === 'email') {
-    try {
-      showLoading();
-      const { error } = await UL.sb.auth.verifyOtp({ token_hash: tokenHash, type: 'email' });
-      hideLoading();
-      if (error) {
-        showLoginPage();
-        toast('Lien de confirmation invalide ou expiré', 'error');
-        return;
-      }
+  // Supabase gère automatiquement le #access_token dans le hash
+  // On écoute l'événement SIGNED_IN pour détecter une confirmation email
+  UL.sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
       window.history.replaceState({}, '', window.location.pathname);
-    } catch(e) {
-      hideLoading();
-      showLoginPage();
-      return;
+      const membre = await UL.getMembre(session.user.id);
+      if (membre) membre ? showApp(membre) : showLoginPage();
     }
-  }
+  });
 
   const { membre } = await UL.initSession();
   membre ? showApp(membre) : showLoginPage();
