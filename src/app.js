@@ -45,9 +45,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Gérer le hash #access_token de Supabase (confirmation email)
   const hash = window.location.hash;
   if (hash && hash.includes('access_token')) {
-    // Laisser Supabase lire le hash et établir la session
-    await new Promise(r => setTimeout(r, 800));
-    // Nettoyer l'URL
+    // Attendre que Supabase établisse la session depuis le hash
+    await new Promise(resolve => {
+      const { data: { subscription } } = UL.sb.auth.onAuthStateChange((event, session) => {
+        if (session) { subscription.unsubscribe(); resolve(); }
+      });
+      // Timeout de sécurité 3s
+      setTimeout(resolve, 3000);
+    });
     window.history.replaceState({}, '', window.location.pathname);
   }
 
