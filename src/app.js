@@ -42,15 +42,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     navigator.serviceWorker.register('/ultras-lutetia/sw.js').catch(() => {});
   }
 
-  // Supabase gère automatiquement le #access_token dans le hash
-  // On écoute l'événement SIGNED_IN pour détecter une confirmation email
-  UL.sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      window.history.replaceState({}, '', window.location.pathname);
-      const membre = await UL.getMembre(session.user.id);
-      if (membre) membre ? showApp(membre) : showLoginPage();
-    }
-  });
+  // Si hash access_token présent, attendre que Supabase JS le traite
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    showLoading();
+    await new Promise(r => setTimeout(r, 1500));
+    hideLoading();
+    window.history.replaceState({}, '', window.location.pathname);
+  }
 
   const { membre } = await UL.initSession();
   membre ? showApp(membre) : showLoginPage();
