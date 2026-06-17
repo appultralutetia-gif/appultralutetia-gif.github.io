@@ -3,14 +3,28 @@
 <head>
   <meta charset="utf-8">
   <title>Ultras Lutetia</title>
-  <script>
-    // Redirige vers l'appli en préservant le hash Supabase
-    const hash = window.location.hash;
-    const search = window.location.search;
-    window.location.replace(
-      'https://appultralutetia-gif.github.io/ultras-lutetia/' + search + hash
-    );
-  </script>
 </head>
-<body></body>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+  const SUPABASE_URL = 'https://afgriuvrtdkklluvtswg.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmZ3JpdXZydGRra2xsdXZ0c3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MTkwODgsImV4cCI6MjA5NzI5NTA4OH0.3jXUyJD87MjhFJctzceMVoeHWGCSqGmVy3TPuXGQebc';
+  const APP_URL = 'https://appultralutetia-gif.github.io/ultras-lutetia/';
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Laisser Supabase traiter le hash, puis rediriger
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      window.location.replace(APP_URL);
+    }
+  });
+
+  // Timeout de sécurité — si pas de session en 3s, rediriger quand même
+  setTimeout(() => {
+    window.location.replace(APP_URL);
+  }, 3000);
+</script>
+</body>
 </html>
